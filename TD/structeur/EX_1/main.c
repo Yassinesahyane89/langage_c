@@ -1,36 +1,34 @@
+
+#include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <time.h>
 
-char *saisirchaine(){
-
-   char *CH, c;
-   int i = 0;
-   CH = (char*)malloc(sizeof(char));
-   while((c = getchar())!='\n'){
-    CH[i]=c;
-    i++;
-    CH = (char*)realloc(CH, (i+1)*sizeof(char));
-   }
-   CH[i]='\0';
-   return CH;
-}
-
-struct personne{
-   char *nom;
-   char *prenom;
-   int num;
+struct Produit{
+   char code;
+   char nom;
+   int quantite;
+   int prix;
 };
-typedef struct personne str;
+typedef struct Produit Produit;
+
+void ajouterProduit(){
+
+
+}
 
 int main()
 {
-    str s;
-    printf("nom : ");
-    s.nom = saisirchaine();
-    printf("prenom : ");
-    s.prenom = saisirchaine();
-    printf("numero : ");
-    scanf("%d",&s.num);
-    printf("%s    %s    %d",s.nom ,s.prenom ,s.num );
+
+    printf("      ================Gestion de Pharmacie================\n");
+    printf("1 - Ajouter un nouveaux produit :\n");
+    printf("2 - Ajouter plusieur nouveaux produit :\n");
+    printf("3 - List tous les produits :\n");
+    printf("4 - Acheter produit :\n");
+    printf("5 - Recherch les produit \n");
+    printf("6 - Etat de stock \n");
+    printf("7 - Alimenter le stock \n");
+    printf("8 - Supprimer les produit \n");
+    printf("9 - Statique de vente \n");
+
 
 }
