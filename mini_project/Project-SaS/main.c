@@ -1,5 +1,6 @@
-#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
 #include <time.h>
 #include <string.h>
 
@@ -8,7 +9,8 @@ struct Produit{
    int code;
    char *nom;
    int quantite;
-   int prix;
+   float prixTTC;
+   float prix;
 };
 typedef struct Produit produit;
 
@@ -21,8 +23,6 @@ typedef struct date Date;
 
 struct produitAcheter{
    int code;
-   char *nom;
-   int prix;
    float prixTTC;
    Date date;
 };
@@ -46,24 +46,24 @@ char *saisierChain(){
 // fonction pour afficher les produit
 void afficher(int size , produit *T){
     int i ;
-    printf("  |     code      |      Nom      |    Quantite   |     Prix      |\n");
-    printf("  |_______________|_______________|_______________|_______________|\n");
+    printf("  |     code      |      Nom      |    Quantite   |     Prix      |    PrixTTC    |\n");
+    printf("  |_______________|_______________|_______________|_______________|_______________|\n");
     for( i = 0 ; i < size ; i++){
-        printf("  |%15d|%15s|%15d|%15d|\n",T[i].code, T[i].nom , T[i].prix , T[i].quantite);
+        printf("  |%15d|%15s|%15d|%15.2f|%15.2f|\n",T[i].code, T[i].nom , T[i].quantite, T[i].prix, T[i].prixTTC);
     }
-    printf("  |_______________|_______________|_______________|_______________|\n");
+    printf("  |_______________|_______________|_______________|_______________|_______________|\n");
 }
 
 // fonction pour afficher les Achter
 void afficherProduitAcheter(int size , PA *T){
     printf("%d\n\n",size);
     int i ;
-    printf("  |     code      |     Prix      |    prixTTC    |     date      |\n");
-    printf("  |_______________|_______________|_______________|_______________|\n");
+    printf("  |     code      |    prixTTC    |     date      |\n");
+    printf("  |_______________|_______________|_______________|\n");
     for( i = 0 ; i < size ; i++){
-        printf("  |%15d|%15d|%15f|   %2d-%2d-%2d    |\n",T[i].code, T[i].prix ,T[i].prixTTC ,T[i].date.jours,T[i].date.mois,T[i].date.annee);
+        printf("  |%15d|%15.2f|   %2d-%2d-%4d  |\n",T[i].code, T[i].prixTTC ,T[i].date.jours,T[i].date.mois,T[i].date.annee);
     }
-    printf("  |_______________|_______________|_______________|_______________|\n");
+    printf("  |_______________|_______________|_______________|\n");
 }
 
 // fonction Ajouter un nouveau produit:
@@ -72,9 +72,15 @@ produit *ajouterProduit(int *size,produit *T){
    n = (*size)++;
    T = realloc(T,(*size)*sizeof(produit));
    getchar();
-   printf("   code de produit :");
-   scanf("%d",&T[n].code);
-   getchar();
+   if(n ==  0)
+   {
+       T[0].code=1;
+   }else{
+       T[n].code=T[n-1].code+1;
+   }
+//   printf("   code de produit :");
+//   scanf("%d",&T[n].code);
+//   getchar();
 
    printf("   nom de produit :");
    T[n].nom=saisierChain();
@@ -83,7 +89,10 @@ produit *ajouterProduit(int *size,produit *T){
    scanf("%d",&T[n].quantite);
 
    printf("   prix de produit :");
-   scanf("%d",&T[n].prix);
+   scanf("%f",&T[n].prix);
+
+   T[n].prixTTC=T[n].prix*1.15;
+
    return T;
 }
 
@@ -102,11 +111,13 @@ void *ajouterPlusieurProduit(int *size,produit *T){
 }
 
 //lister tous les produits selon l’ordre alphabétique  croissant du nom.
-ListLordreAlphabetique(int *size,produit *T){
+void ListLordreAlphabetique(int size , produit *T){
+    system("cls");
+    printf("======            list produits l'ordre alphabetique  croissant du nom            ======\n\n");
     int i, j;
     produit p;
-    for(i = 0 ; i < *size ; i++){
-            for(j = i+1 ; j < *size ; j++){
+    for(i = 0 ; i < size ; i++){
+            for(j = i+1 ; j < size ; j++){
                 if((strcmp(T[i].nom,T[j].nom))==1)
                 {
                     p = T[i];
@@ -115,32 +126,30 @@ ListLordreAlphabetique(int *size,produit *T){
                 }
             }
     }
-    for(i = 0 ; i < *size ; i++){
-        printf("%s    %d     %f\n",T[i].nom,T[i].prix,T[i].prix*1.5);
-    }
+    afficher(size,T);
 }
 
 //lister tous les produits selon l’ordre  décroissant du prix.
-ListLordrePrix(int *size,produit *T){
+void ListLordrePrix(int size,produit *T){
+    system("cls");
+    printf("======            list produits l'ordre decroissant du prix            ======\n\n");
     int i, j;
     produit p;
-    for(i = 0 ; i < *size ; i++){
-            for(j = i+1 ; j < *size ; j++){
-                if(T[i].prix<T[j].prix)
-                {
-                    p = T[i];
-                    T[i]=T[j];
-                    T[j]  = p;
-                }
+    for(i = 0 ; i < size ; i++){
+        for(j = i+1 ; j < size ; j++){
+            if(T[i].prix<T[j].prix)
+            {
+                p = T[i];
+                T[i] = T[j];
+                T[j]  = p;
             }
+        }
     }
-    for(i = 0 ; i < *size ; i++){
-        printf("%s    %d     %f\n",T[i].nom,T[i].prix,T[i].prix*1.5);
-    }
+    afficher(size,T);
 }
 
 //fonction Lister tous les produits (Nom, prix, prix TTC)
-void listProduit(int *size,produit *T){
+void listProduit(int size,produit *T){
     system("cls");
     printf("======            Liste tous les produit             ======\n");
     int n;
@@ -158,48 +167,6 @@ void listProduit(int *size,produit *T){
 
 }
 
-// fonction Acheter produit
-PA *acheterProduit(int *size, produit *T, PA *A, int *sizeA){
-   system("cls");
-   printf("======            Acheter produit             ======\n");
-    printf("*sizeA=%d\n",*sizeA);
-    int n, i, m=(*sizeA)++;
-    printf("*sizeA=%d\n",*sizeA);
-    printf("m=%d\n",m);
-    A = realloc(A,(m+1)*sizeof(PA));
-    afficher(*size , T);
-    printf("\n   entrez le code du produit que vous souhaitez acheter : ");
-    scanf("%d",&n);
-    for(i = 0 ; i < (*size) ; i++){
-        if(n ==  T[i].code){
-            printf(" T   %d     %s      %d\n",T[i].code,T[i].nom,T[i].prix);
-            printf("%d\n",T[i].quantite);A
-            T[i].quantite-=1;
-            printf("%d\n",T[i].quantite);
-            A[m].code=T[i].code;
-            A[m].nom=T[i].nom;
-            A[m].prix=T[i].prix;
-            A[m].prixTTC=T[i].prix * 1.15;
-            getDate(&A[m].date);
-            printf("A    %d     %s      %d\n",A[m].code,A[m].nom,A[m].prix);
-            break;
-        }
-
-    }
-  return A;
-}
-
-//Enregistrer produit Achter
-void  enregProduitAcheter(int i, produit *T,PA *A, int *sizeA){
-    int n = *sizeA;
-//    Date d = getDate();
-    A[n].code=T[i].code;
-    A[n].nom=T[i].nom;
-    A[n].prix=T[i].prix;
-    A[n].prixTTC=T[i].prix * 1.15;
-    getDate(&A[n].date);
-}
-
 // fonction qui obtenir date dans mon systèm
 void getDate(Date *d){
   time_t t = time(NULL);
@@ -209,9 +176,71 @@ void getDate(Date *d){
   d->jours = tm.tm_mday;
 }
 
+// fonction Acheter produit
+PA *acheterProduit(int *size, produit *T, PA *A, int *sizeA){
+   system("cls");
+   printf("======            Acheter produit             ======\n");
+    int n,q, i, m=(*sizeA)++;
+    A = realloc(A,(m+1)*sizeof(PA));
+    afficher(*size , T);
+    printf("\n   entrez le code du produit que vous souhaitez acheter : ");
+    scanf("%d",&n);
+    printf("\n   entrez la quantité que vous souhaitez acheter : \n");
+    scanf("%d",&q);
+    for(i = 0 ; i < (*size) ; i++){
+        if(n ==  T[i].code){
+            T[i].quantite-=q;
+            A[m].code=T[i].code;
+            A[m].prixTTC=T[i].prixTTC;
+            getDate(&A[m].date);
+            break;
+        }
+    }
+  return A;
+}
+
+
+//Rechercher les produits par Code
+void recherchProduitCode(int size, produit *T){
+    system("cls");
+    printf("======            Rechercher les produits par Code            ======\n");
+    int n, k=0, i;
+    produit *V;
+    V = malloc(sizeof(produit));
+    printf("entrer le code de produits :");
+    scanf("%d",&n);
+    for(i = 0 ; i < size ; i++){
+        if(T[i].code == n){
+            V[k]=T[i];
+            k++;
+            V = realloc(V,(k+1)*sizeof(produit));
+            break;
+        }
+    }
+    afficher(k,V);
+}
+
+//Rechercher les produits par Quantite
+void recherchProduitQuantite(int size, produit *T){
+    system("cls");
+    printf("======            Rechercher les produits par Quantite            ======\n");
+    int n, k=0, i;
+    produit *V;
+    V = malloc(sizeof(produit));
+    printf("entrer la quantite de produits :");
+    scanf("%d",&n);
+    for(i = 0 ; i < size ; i++){
+        if(T[i].quantite == n){
+            V[k]=T[i];
+            k++;
+            V = realloc(V,(k+1)*sizeof(produit));
+        }
+    }
+    afficher(k,V);
+}
 
 //Rechercher les produit
-void recherchProduit(int *size, produit *T){
+void recherchProduit(int size, produit *T){
    system("cls");
    printf("======            Rechercher les produits            ======\n");
    int n;
@@ -227,58 +256,22 @@ void recherchProduit(int *size, produit *T){
    }
 }
 
-//Rechercher les produits par Code
-void recherchProduitCode(int *size, produit *T){
-    system("cls");
-    printf("======            Rechercher les produits par Code            ======\n");
-    int n, k=0, i;
-    printf("entrer le code de produits :");
-    scanf("%d",&n);
-    for(i = 0 ; i < *size ; i++){
-        if(T[i].code == n){
-            k++;
-            printf(" %d   %s   %d    %d\n",T[i].code,T[i].nom,T[i].quantite,T[i].prix);
-        }
-    }
-    if(k == 0){
-        printf("error!! il n'y a aucun produit avec ce code\n");
-    }
-
-}
-
-//Rechercher les produits par Quantite
-void recherchProduitQuantite(int *size, produit *T){
-    system("cls");
-    printf("======            Rechercher les produits par Quantite            ======\n");
-    int n, k=0, i;
-    printf("entrer la quantite de produits :");
-    scanf("%d",&n);
-    for(i = 0 ; i < *size ; i++){
-        if(T[i].quantite == n){
-            k++;
-            printf(" %d   %s   %d    %d\n",T[i].code,T[i].nom,T[i].quantite,T[i].prix);
-        }
-    }
-    if(k == 0){
-        printf("error!! il n'y a aucun produit avec ce Quantité\n");
-    }
-
-}
-
 // Etat du stock
-void etatStock(int *size, produit *T){
+void etatStock(int size, produit *T){
     system("cls");
-    printf("======            Etat du stock            ======\n");
+    printf("   ======            Etat du stock            ======\n");
     int i;
-    for(i = 0 ; i < *size ; i++){
-        if(T[i].quantite<3){
-             printf(" %d   %s   %d    %d\n",T[i].code,T[i].nom,T[i].quantite,T[i].prix);
-        }
+    printf("  |     code      |      Nom      |    Quantite   |     Prix      |    PrixTTC    |\n");
+    printf("  |_______________|_______________|_______________|_______________|_______________|\n");
+    for( i = 0 ; i < size ; i++){
+       if(T[i].quantite<3)
+         printf("  |%15d|%15s|%15d|%15.2f|%15.2f|\n",T[i].code, T[i].nom , T[i].quantite, T[i].prix, T[i].prixTTC);
     }
+    printf("  |_______________|_______________|_______________|_______________|_______________|\n");
 }
 
 // Alimenter le stock
-void alimenterStock(int *size, produit *T){
+void alimenterStock(int size, produit *T){
     system("cls");
     printf("======            Alimenter le stock            ======\n");
     int i, n, m;
@@ -286,7 +279,7 @@ void alimenterStock(int *size, produit *T){
     scanf("%d",&n);
     printf("entrer la quantite de produit :");
     scanf("%d",&m);
-    for(i = 0 ; i < *size ; i++){
+    for(i = 0 ; i < size ; i++){
         if(T[i].code == n){
              T[i].quantite+=m;
         }
@@ -309,41 +302,38 @@ void supprimerProduit(int *size, produit *T){
     for(i = m  ; i < *size ; i++){
        T[i]=T[i+1];
     }
-
-    *size = (*size) -1;
-
+    T = realloc(T,(--(*size))*sizeof(produit));
 }
 
 // fonction Statistique de vente
-statiqueVente(int *sizeA, PA *A){
+void statiqueVente(int sizeA, PA *A){
     system("cls");
     Date d;
     getDate(&d);
     printf("======            Statistique de vente:  %d - %d - %d             ======\n",d.jours,d.mois,d.annee);
-    int n=0;
-    int i , max ,min ;
-    float s;
-    max = A[0].prix;
-    min = A[0].prix;
-    for(i = 0 ; i < *sizeA ; i++){
+    int i ,n=0;
+    float s, max ,min;
+    max = A[0].prixTTC;
+    min = A[0].prixTTC;
+    for(i = 0 ; i < sizeA ; i++){
       if(A[i].date.annee == d.annee && A[i].date.mois == d.mois && A[i].date.jours == d.jours )
           {
-              s+=A[i].prix;
+              s+=A[i].prixTTC;
               n++;
           }
-      if(A[i].prix>max)
+      if(A[i].prixTTC>max)
       {
-          max = A[i].prix;
+          max = A[i].prixTTC;
       }
-      if(A[i].prix<min)
+      if(A[i].prixTTC<min)
       {
-          min = A[i].prix;
+          min = A[i].prixTTC;
       }
     }
-    printf("total des prix des produits vendus   :%d\n",s);
-    printf("moyenne des prix des produits vendus :%f\n",(float)s/(float)n);
-    printf("Max des prix des produits vendus     :%d\n",max);
-    printf("Min des prix des produits vendus     :%d\n",min);
+    printf("total des prix des produits vendus   :%.2f\n",s);
+    printf("moyenne des prix des produits vendus :%.2f\n",(float)s/(float)n);
+    printf("Max des prix des produits vendus     :%.2f\n",max);
+    printf("Min des prix des produits vendus     :%.2f\n",min);
 }
 
 int main()
@@ -361,15 +351,15 @@ int main()
     while(choix != 'N'){
     printf("      ================Gestion de Pharmacie================\n\n");
     //Menu
-    printf("   1 - Ajouter un nouveaux produit :\n");
-    printf("   2 - Ajouter plusieur nouveaux produit :\n");
-    printf("   3 - Afficher tableau de produit :\n");
-    printf("   4 - List tous les produits :\n");
-    printf("   5 - Acheter produit :\n");
-    printf("   6 - Recherch les produit \n");
-    printf("   7 - Etat de stock \n");
-    printf("   8 - Alimenter le stock \n");
-    printf("   9 - Supprimer les produit \n");
+    printf("   1  - Ajouter un nouveaux produit :\n");
+    printf("   2  - Ajouter plusieur nouveaux produit :\n");
+    printf("   3  - Afficher tableau de produit :\n");
+    printf("   4  - List tous les produits :\n");
+    printf("   5  - Acheter produit :\n");
+    printf("   6  - Recherch les produit \n");
+    printf("   7  - Etat de stock \n");
+    printf("   8  - Alimenter le stock \n");
+    printf("   9  - Supprimer les produit \n");
     printf("   10 - Statique de vente \n");
     printf("   11 - Afficher tableau de produit Acheter :\n\n");
 
@@ -384,23 +374,23 @@ int main()
               printf("======            Ajouter un nouveau produit            ======\n");
               T=ajouterProduit(&size,T);
               break;
-      case 2: T=ajouterPlusieurProduit(&size,T);
+      case 2 : T=ajouterPlusieurProduit(&size,T);
               break;
-      case 3: afficher(size, T);
+      case 3 : afficher(size, T);
               break;
-      case 4: listProduit(&size,T);
+      case 4 : listProduit(size,T);
               break;
-      case 5: A=acheterProduit(&size,T,A,&sizeA);
+      case 5 : A=acheterProduit(&size,T,A,&sizeA);
               break;
-      case 6: recherchProduit(&size,T);
+      case 6 : recherchProduit(size,T);
               break;
-      case 7: etatStock(&size,T);
+      case 7 : etatStock(size,T);
               break;
-      case 8: alimenterStock(&size,T);
+      case 8 : alimenterStock(size,T);
               break;
-      case 9: supprimerProduit(&size,T);
+      case 9 : supprimerProduit(&size,T);
               break;
-      case 10: statiqueVente(&sizeA,A);
+      case 10: statiqueVente(sizeA,A);
               break;
       case 11: afficherProduitAcheter(sizeA,A);
               break;
