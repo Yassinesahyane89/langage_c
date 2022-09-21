@@ -24,6 +24,8 @@ typedef struct date Date;
 struct produitAcheter{
    int code;
    float prixTTC;
+   int quantite;
+   float prixTotal;
    Date date;
 };
 typedef struct produitAcheter PA;
@@ -58,12 +60,12 @@ void afficher(int size , produit *T){
 void afficherProduitAcheter(int size , PA *T){
     printf("%d\n\n",size);
     int i ;
-    printf("  |     code      |    prixTTC    |     date      |\n");
-    printf("  |_______________|_______________|_______________|\n");
+    printf("  |     code      |    prixTTC    |    Quantite   |   PrixTotal   |     date      |\n");
+    printf("  |_______________|_______________|_______________|_______________|_______________|\n");
     for( i = 0 ; i < size ; i++){
-        printf("  |%15d|%15.2f|   %2d-%2d-%4d  |\n",T[i].code, T[i].prixTTC ,T[i].date.jours,T[i].date.mois,T[i].date.annee);
+        printf("  |%15d|%15.2f|%15d|%15.2f|   %2d-%2d-%4d  |\n",T[i].code, T[i].prixTTC , T[i].quantite, T[i].prixTotal , T[i].date.jours,T[i].date.mois,T[i].date.annee);
     }
-    printf("  |_______________|_______________|_______________|\n");
+    printf("  |_______________|_______________|_______________|_______________|_______________|\n");
 }
 
 // fonction Ajouter un nouveau produit:
@@ -78,9 +80,6 @@ produit *ajouterProduit(int *size,produit *T){
    }else{
        T[n].code=T[n-1].code+1;
    }
-//   printf("   code de produit :");
-//   scanf("%d",&T[n].code);
-//   getchar();
 
    printf("   nom de produit :");
    T[n].nom=saisierChain();
@@ -117,14 +116,14 @@ void ListLordreAlphabetique(int size , produit *T){
     int i, j;
     produit p;
     for(i = 0 ; i < size ; i++){
-            for(j = i+1 ; j < size ; j++){
-                if((strcmp(T[i].nom,T[j].nom))==1)
-                {
-                    p = T[i];
-                    T[i]=T[j];
-                    T[j]  = p;
-                }
+        for(j = i+1 ; j < size ; j++){
+            if((strcmp(T[i].nom,T[j].nom))==1)
+            {
+                p = T[i];
+                T[i]=T[j];
+                T[j]  = p;
             }
+        }
     }
     afficher(size,T);
 }
@@ -166,6 +165,17 @@ void listProduit(int size,produit *T){
 
 
 }
+// fonction recherch par code
+int recherchParCode(int code, int size, produit *T){
+    int  i;
+    for(i = 0 ; i < size ; i++){
+        if(T[i].code == code)
+        {
+            return i;
+        }
+    }
+  return -1;
+}
 
 // fonction qui obtenir date dans mon systèm
 void getDate(Date *d){
@@ -180,18 +190,46 @@ void getDate(Date *d){
 PA *acheterProduit(int *size, produit *T, PA *A, int *sizeA){
    system("cls");
    printf("======            Acheter produit             ======\n");
-    int n,q, i, m=(*sizeA)++;
-    A = realloc(A,(m+1)*sizeof(PA));
+    int n,q, i, m=(*sizeA);
+
     afficher(*size , T);
+
     printf("\n   entrez le code du produit que vous souhaitez acheter : ");
     scanf("%d",&n);
-    printf("\n   entrez la quantité que vous souhaitez acheter : \n");
+
+    while(recherchParCode(n,*size,T)==-1){
+        char c;
+        getchar();
+
+        printf("Nous n'avons pas cette produit veuillez enter un autre code ou quite  (Y/Q) : ");
+        scanf("%c",&c);
+
+        if(c == 'Q'){
+            return A;
+        }
+
+        printf("\n   entrez le code du produit que vous souhaitez acheter : ");
+        scanf("%d",&n);
+
+    }
+
+    printf("\n   entrez la quantite que vous souhaitez acheter : ");
     scanf("%d",&q);
+
+    while(q>T[n-1].quantite){
+        printf("Nous n'avons pas cette quantite en stock veuillez entrer un autre quantite : ");
+        scanf("%d",&q);
+    }
+    (*sizeA)++;
+    A = realloc(A,(m+1)*sizeof(PA));
+
     for(i = 0 ; i < (*size) ; i++){
         if(n ==  T[i].code){
             T[i].quantite-=q;
             A[m].code=T[i].code;
+            A[m].quantite=q;
             A[m].prixTTC=T[i].prixTTC;
+            A[m].prixTotal=T[i].prixTTC*q;
             getDate(&A[m].date);
             break;
         }
@@ -199,44 +237,56 @@ PA *acheterProduit(int *size, produit *T, PA *A, int *sizeA){
   return A;
 }
 
-
 //Rechercher les produits par Code
 void recherchProduitCode(int size, produit *T){
     system("cls");
     printf("======            Rechercher les produits par Code            ======\n");
-    int n, k=0, i;
+
+    int n, k=0 , m=0, i;
     produit *V;
     V = malloc(sizeof(produit));
+
     printf("entrer le code de produits :");
     scanf("%d",&n);
-    for(i = 0 ; i < size ; i++){
-        if(T[i].code == n){
+
+    if(recherchParCode(n,size,T)!=-1){
             V[k]=T[i];
             k++;
             V = realloc(V,(k+1)*sizeof(produit));
-            break;
-        }
+            m=1;
     }
-    afficher(k,V);
+
+    if(m==1)
+        afficher(k,V);
+    else
+        printf("\n    Nous n'avons pas aucun produit en stock avec ce code  : \n");
 }
 
 //Rechercher les produits par Quantite
 void recherchProduitQuantite(int size, produit *T){
     system("cls");
     printf("======            Rechercher les produits par Quantite            ======\n");
-    int n, k=0, i;
+
+    int n, k=0, m = 0, i;
     produit *V;
     V = malloc(sizeof(produit));
+
     printf("entrer la quantite de produits :");
     scanf("%d",&n);
+
     for(i = 0 ; i < size ; i++){
         if(T[i].quantite == n){
             V[k]=T[i];
             k++;
+            m = 1;
             V = realloc(V,(k+1)*sizeof(produit));
         }
     }
-    afficher(k,V);
+
+    if(m==1)
+        afficher(k,V);
+    else
+        printf("\n    Nous n'avons pas aucun produit en stock avec ce quantite  : \n");
 }
 
 //Rechercher les produit
@@ -260,14 +310,25 @@ void recherchProduit(int size, produit *T){
 void etatStock(int size, produit *T){
     system("cls");
     printf("   ======            Etat du stock            ======\n");
-    int i;
-    printf("  |     code      |      Nom      |    Quantite   |     Prix      |    PrixTTC    |\n");
-    printf("  |_______________|_______________|_______________|_______________|_______________|\n");
+
+    int i, m = 0 , k = 0;
+    produit *V;
+    V = malloc(sizeof(produit));
+
     for( i = 0 ; i < size ; i++){
        if(T[i].quantite<3)
-         printf("  |%15d|%15s|%15d|%15.2f|%15.2f|\n",T[i].code, T[i].nom , T[i].quantite, T[i].prix, T[i].prixTTC);
+         {
+            V[k]=T[i];
+            k++;
+            m = 1;
+            V = realloc(V,(k+1)*sizeof(produit));
+         }
     }
-    printf("  |_______________|_______________|_______________|_______________|_______________|\n");
+
+    if(m==1)
+        afficher(k,V);
+    else
+        printf("\n    Nous n'avons pas aucun produit en stock avec quantite  inferieur 3 : \n");
 }
 
 // Alimenter le stock
@@ -275,34 +336,43 @@ void alimenterStock(int size, produit *T){
     system("cls");
     printf("======            Alimenter le stock            ======\n");
     int i, n, m;
+
     printf("entrer la code de produit :");
     scanf("%d",&n);
-    printf("entrer la quantite de produit :");
-    scanf("%d",&m);
-    for(i = 0 ; i < size ; i++){
-        if(T[i].code == n){
-             T[i].quantite+=m;
-        }
+
+    int index = recherchParCode(n , size , T);
+    if(index==-1)
+    {
+        printf("\n    Nous n'avons pas aucun produit en stock avec ce code  : \n");
+    }else
+    {
+        printf("entrer la quantite de produit :");
+        scanf("%d",&m);
+
+         T[index].quantite+=m;
     }
 }
 
 // fonction Supprimer les produits par Code
 void supprimerProduit(int *size, produit *T){
-  system("cls");
-  printf("======            Supprimer les produits par Code            ======\n");
-  int i, n, m;
-  printf("entrer la code de produit :");
-  scanf("%d",&n);
-   for(i = 0 ; i < *size ; i++){
-        if(T[i].code == n){
-             m=i;
-             break;
+    system("cls");
+    printf("======            Supprimer les produits par Code            ======\n");
+    int i, n, m;
+
+    printf("entrer la code de produit :");
+    scanf("%d",&n);
+
+    int index = recherchParCode(n , *size , T);
+    if(index==-1)
+    {
+        printf("\n    Nous n'avons pas aucun produit en stock avec ce code pour le supprimer : \n");
+    }else{
+
+        for(i = index  ; i < *size ; i++){
+           T[i]=T[i+1];
         }
+        T = realloc(T,(--(*size))*sizeof(produit));
     }
-    for(i = m  ; i < *size ; i++){
-       T[i]=T[i+1];
-    }
-    T = realloc(T,(--(*size))*sizeof(produit));
 }
 
 // fonction Statistique de vente
@@ -311,27 +381,31 @@ void statiqueVente(int sizeA, PA *A){
     Date d;
     getDate(&d);
     printf("======            Statistique de vente:  %d - %d - %d             ======\n",d.jours,d.mois,d.annee);
-    int i ,n=0;
+
+    int i ,n=0 , q=0;
     float s, max ,min;
+
     max = A[0].prixTTC;
     min = A[0].prixTTC;
+
     for(i = 0 ; i < sizeA ; i++){
       if(A[i].date.annee == d.annee && A[i].date.mois == d.mois && A[i].date.jours == d.jours )
           {
-              s+=A[i].prixTTC;
+              s+=A[i].prixTotal;
+              q+=A[i].quantite;
               n++;
           }
       if(A[i].prixTTC>max)
       {
-          max = A[i].prixTTC;
+          max = A[i].prixTotal;
       }
       if(A[i].prixTTC<min)
       {
-          min = A[i].prixTTC;
+          min = A[i].prixTotal;
       }
     }
     printf("total des prix des produits vendus   :%.2f\n",s);
-    printf("moyenne des prix des produits vendus :%.2f\n",(float)s/(float)n);
+    printf("moyenne des prix des produits vendus :%.2f\n",(float)s/(float)q);
     printf("Max des prix des produits vendus     :%.2f\n",max);
     printf("Min des prix des produits vendus     :%.2f\n",min);
 }
@@ -348,6 +422,7 @@ int main()
     // Allocation dynamique de tableau
     T=malloc(sizeof(produit));
     A=malloc(sizeof(PA));
+
     while(choix != 'N'){
     printf("      ================Gestion de Pharmacie================\n\n");
     //Menu
